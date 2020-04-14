@@ -1,0 +1,169 @@
+version: '2'
+
+services:、
+  # gitlab使用的redis
+  redis:
+    restart: always #设置自动重启
+    image: sameersbn/redis:4.0.9-2 #依赖的镜像
+    command:
+    - --loglevel warning
+    volumes:
+    - /home/gitlab/redis-data:/var/lib/redis:Z  # 前面指映射到宿主机的路径 可以自行修改 将容器内部的redis路径映射到宿主机的/home/gitlab/redis-data路径
+  # gitlab使用的sql
+  postgresql:
+    restart: always
+    image: sameersbn/postgresql:10-2
+    volumes:
+    - /home/gitlab/postgresql-data:/var/lib/postgresql:Z # 映射路径
+    environment:
+    - DB_USER=gitlab #数据库账户
+    - DB_PASS=password #数据库密码
+    - DB_NAME=gitlabhq_production
+    - DB_EXTENSION=pg_trgm
+
+  gitlab:
+    restart: always
+    image: sameersbn/gitlab:12.9.2
+    depends_on: #依赖的模块，等他们完成之后我再启动
+    - redis
+    - postgresql
+    ports:
+    - "10080:80" # 映射到宿主机的端口
+    - "10022:22"
+    volumes:
+    - /home/gitlab/gitlab-data:/home/git/data:Z
+    environment:
+    - DEBUG=false
+    # 依赖的数据库相关配置
+    - DB_ADAPTER=postgresql
+    - DB_HOST=postgresql
+    - DB_PORT=5432
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+    # 依赖的redis相关配置
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+
+    - TZ=Asia/Kolkata
+    - GITLAB_TIMEZONE=Kolkata
+
+    - GITLAB_HTTPS=false
+    - SSL_SELF_SIGNED=false
+
+    - GITLAB_HOST=xxx.xxx.xxx.xxx # 对外域名或ip
+    - GITLAB_PORT=10080 # 访问git的端口号
+    - GITLAB_SSH_PORT=10022 # 指定ssh端口
+    - GITLAB_RELATIVE_URL_ROOT=
+    - GITLAB_SECRETS_DB_KEY_BASE=79e7f30b-72ce-4710-bf57-f1803015c4ef # 直接用 uuidgen 生成一个就好了
+    - GITLAB_SECRETS_SECRET_KEY_BASE=3284d708-951e-4125-9d44-daee021c5b54 # 直接用 uuidgen 生成一个就好了
+    - GITLAB_SECRETS_OTP_KEY_BASE=79f55415-42ad-41d3-a20c-753950359csw # 直接用 uuidgen 生成一个就好了
+
+    - GITLAB_ROOT_PASSWORD=xxxxxxx #密码 至少8位数
+    - GITLAB_ROOT_EMAIL=xxxxx@xx.com #初始化管理员登录的邮箱
+
+    - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+    - GITLAB_NOTIFY_PUSHER=false
+    # 邮箱相关配置
+    - GITLAB_EMAIL=notifications@example.com
+    - GITLAB_EMAIL_REPLY_TO=noreply@example.com
+    - GITLAB_INCOMING_EMAIL_ADDRESS=reply@example.com
+    # 备份相关配置
+    - GITLAB_BACKUP_SCHEDULE=daily
+    - GITLAB_BACKUP_TIME=01:00
+    - GITLAB_BACKUP_EXPIRY=604800 #每七天备份清理之前的备份
+    # 邮件服务相关配置
+    - SMTP_ENABLED=false
+    - SMTP_DOMAIN=xxx.com
+    - SMTP_HOST=smtp.xxx.com
+    - SMTP_PORT=465
+    - SMTP_USER=xxx@xxx.com
+    - SMTP_PASS=xxxxxxx
+    - SMTP_STARTTLS=true
+    - SMTP_AUTHENTICATION=login
+
+    - IMAP_ENABLED=false
+    - IMAP_HOST=imap.gmail.com
+    - IMAP_PORT=993
+    - IMAP_USER=mailer@example.com
+    - IMAP_PASS=password
+    - IMAP_SSL=true
+    - IMAP_STARTTLS=false
+    
+    - OAUTH_ENABLED=false
+    - OAUTH_AUTO_SIGN_IN_WITH_PROVIDER=
+    - OAUTH_ALLOW_SSO=
+    - OAUTH_BLOCK_AUTO_CREATED_USERS=true
+    - OAUTH_AUTO_LINK_LDAP_USER=false
+    - OAUTH_AUTO_LINK_SAML_USER=false
+    - OAUTH_EXTERNAL_PROVIDERS=
+
+    - OAUTH_CAS3_LABEL=cas3
+    - OAUTH_CAS3_SERVER=
+    - OAUTH_CAS3_DISABLE_SSL_VERIFICATION=false
+    - OAUTH_CAS3_LOGIN_URL=/cas/login
+    - OAUTH_CAS3_VALIDATE_URL=/cas/p3/serviceValidate
+    - OAUTH_CAS3_LOGOUT_URL=/cas/logout
+
+    - OAUTH_GOOGLE_API_KEY=
+    - OAUTH_GOOGLE_APP_SECRET=
+    - OAUTH_GOOGLE_RESTRICT_DOMAIN=
+
+    - OAUTH_FACEBOOK_API_KEY=
+    - OAUTH_FACEBOOK_APP_SECRET=
+
+    - OAUTH_TWITTER_API_KEY=
+    - OAUTH_TWITTER_APP_SECRET=
+
+    - OAUTH_GITHUB_API_KEY=
+    - OAUTH_GITHUB_APP_SECRET=
+    - OAUTH_GITHUB_URL=
+    - OAUTH_GITHUB_VERIFY_SSL=
+
+    - OAUTH_GITLAB_API_KEY=
+    - OAUTH_GITLAB_APP_SECRET=
+
+    - OAUTH_BITBUCKET_API_KEY=
+    - OAUTH_BITBUCKET_APP_SECRET=
+
+    - OAUTH_SAML_ASSERTION_CONSUMER_SERVICE_URL=
+    - OAUTH_SAML_IDP_CERT_FINGERPRINT=
+    - OAUTH_SAML_IDP_SSO_TARGET_URL=
+    - OAUTH_SAML_ISSUER=
+    - OAUTH_SAML_LABEL="Our SAML Provider"
+    - OAUTH_SAML_NAME_IDENTIFIER_FORMAT=urn:oasis:names:tc:SAML:2.0:nameid-format:transient
+    - OAUTH_SAML_GROUPS_ATTRIBUTE=
+    - OAUTH_SAML_EXTERNAL_GROUPS=
+    - OAUTH_SAML_ATTRIBUTE_STATEMENTS_EMAIL=
+    - OAUTH_SAML_ATTRIBUTE_STATEMENTS_NAME=
+    - OAUTH_SAML_ATTRIBUTE_STATEMENTS_USERNAME=
+    - OAUTH_SAML_ATTRIBUTE_STATEMENTS_FIRST_NAME=
+    - OAUTH_SAML_ATTRIBUTE_STATEMENTS_LAST_NAME=
+
+    - OAUTH_CROWD_SERVER_URL=
+    - OAUTH_CROWD_APP_NAME=
+    - OAUTH_CROWD_APP_PASSWORD=
+
+    - OAUTH_AUTH0_CLIENT_ID=
+    - OAUTH_AUTH0_CLIENT_SECRET=
+    - OAUTH_AUTH0_DOMAIN=
+    - OAUTH_AUTH0_SCOPE=
+
+    - OAUTH_AZURE_API_KEY=
+    - OAUTH_AZURE_API_SECRET=
+    - OAUTH_AZURE_TENANT_ID=
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner # 容器名称
+    restart: always
+    depends_on:
+    - gitlab
+    volumes:
+    - ./config/gitlab-runner:/etc/gitlab-runner
+    - /var/run/docker.sock:/var/run/docker.sock # 这个映射地址不需要修改，此为映射的docker再本机的地址即可
+
+volumes:
+  redis-data:
+  postgresql-data:
+  gitlab-data:
