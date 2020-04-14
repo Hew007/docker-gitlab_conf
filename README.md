@@ -5,4 +5,4 @@
 
 > 注意，如果启动完成之后，访问不了，请查看服务器防火墙以及云服务商是否放行对应的端口
 
-更多参数设置，请参考开源项目[docker-gitlab](https://github.com/sameersbn/docker-gitlab)。
+更多参数设置说明，请参考开源项目[docker-gitlab](https://github.com/sameersbn/docker-gitlab)。
